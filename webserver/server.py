@@ -56,6 +56,33 @@ def index():
   context = { 'tags': tags, 'posts': posts }
   return render_template("index.html", **context)
 
+@app.route('/posts/<tag>')
+def posts(tag):
+  # Get all tags
+  cursor = g.conn.execute("SELECT * FROM tags")
+  tags = []
+  for result in cursor:
+    tags.append(result[0])
+  cursor.close()
+
+  # Get all posts
+  cmd = "SELECT * FROM post WHERE tag=(:tag)"
+  cursor = g.conn.execute(text(cmd), tag=tag)
+
+  posts = []
+  for result in cursor:
+      posts.append({
+        'tag': result[2],
+        'title': result[3],
+        'date': result[4].strftime('%B %d, %Y'),
+        'caption': result[5],
+        'photo': result[6]
+      })
+  cursor.close()
+
+  context = { 'tags': tags, 'posts': posts }
+  return render_template("posts_with_tag.html", **context)
+
 if __name__ == "__main__":
   import click
 
