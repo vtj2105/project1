@@ -57,6 +57,7 @@ def index():
     posts = []
     for result in cursor:
         posts.append({
+            'pid': result[0],
             'tag': result[2],
             'title': result[3],
             'date': result[4].strftime('%B %d, %Y'),
@@ -95,6 +96,7 @@ def hall_of_fame():
     posts = []
     for result in cursor:
         posts.append({
+            'pid': result[0],
             'tag': result[2],
             'title': result[3],
             'date': result[4].strftime('%B %d, %Y'),
@@ -106,6 +108,92 @@ def hall_of_fame():
     context = {'tags': tags, 'posts': posts}
     return render_template('hall_of_fame.html', **context)
 
+@app.route('/post/<pid>')
+def post(pid):
+    # Get all tags
+
+    cursor = g.conn.execute('SELECT * FROM tags')
+
+    tags = []
+    for result in cursor:
+        tags.append(result[0])
+    cursor.close()
+
+    # Get post by pid
+
+    cmd = \
+        """
+            SELECT * FROM post AS P
+                WHERE P.pid=:pid
+                LIMIT 1
+        """
+    cursor = g.conn.execute(text(cmd), pid=pid)
+    if cursor.rowcount == 0:
+        context = {'post': None, 'tags': tags}
+        return render_template('post.html', **context)
+
+    result = cursor.fetchone()
+    post = {}
+    if result:
+        post = {
+                'pid': result[0],
+                'uid': result[1],
+                'tag': result[2],
+                'title': result[3],
+                'date': result[4].strftime('%B %d, %Y'),
+                'caption': result[5],
+                'photo': result[6],
+        }
+    cursor.close()
+
+    # Get creator of post
+
+    cmd = \
+        """
+            SELECT fname, lname FROM users AS U
+                WHERE U.uid=:uid
+                LIMIT 1
+        """
+    cursor = g.conn.execute(text(cmd), uid=post['uid'])
+    result = cursor.fetchone()
+    username = "%s %s" % (result[0], result[1])
+
+    # Get post comments
+
+    cmd = \
+        """
+            SELECT content, time, uid FROM comment AS C
+                WHERE C.pid=:pid
+        """
+    cursor = g.conn.execute(text(cmd), pid=pid)
+    comments = []
+
+    for result in cursor:
+        # Get username for comment creator
+
+        uid = result[2]
+
+        cmd = \
+            """
+                SELECT email FROM users AS U
+                    WHERE U.uid=:uid
+                    LIMIT 1
+            """
+        temp_cursor = g.conn.execute(text(cmd), uid=uid)
+        temp_result = temp_cursor.fetchone()
+
+        username = temp_result[0].split('@')[0]
+        comments.append({
+            'content': result[0],
+            'time': result[1].strftime('%B %d, %Y'),
+            'username': username
+        })
+
+        temp_cursor.close()
+    cursor.close()
+
+    context = {'tags': tags, 'post': post, 'comments': comments, 'username': username}
+    return render_template('post.html', **context)
 
 @app.route('/posts/today')
 def posts_today():
@@ -131,6 +219,7 @@ def posts_today():
     posts = []
     for result in cursor:
         posts.append({
+            'pid': result[0],
             'tag': result[2],
             'title': result[3],
             'date': result[4].strftime('%B %d, %Y'),
@@ -170,6 +259,7 @@ def posts_with_tag(tag):
     posts = []
     for result in cursor:
         posts.append({
+            'pid': result[0],
             'tag': result[2],
             'title': result[3],
             'date': result[4].strftime('%B %d, %Y'),
@@ -180,6 +270,18 @@ def posts_with_tag(tag):
 
     context = {'tags': tags, 'posts': posts, 'tag': tag}
     return render_template('posts_with_tag.html', **context)
+
+@app.route('/comment/<content>/<pid>')
+def add_comment(content, pid):
+
+    # Add comment to post
+
+    cmd = """INSERT INTO comment(content, time, uid, pid) VALUES (:content, :time, :uid, :pid);"""
+    engine.execute(text(cmd), content=content, time=datetime.now(), uid=1, pid=pid)
+
+    return redirect('/post/%s' % pid)
+
+
 
 
 @app.route('/posts/trending')
@@ -209,6 +311,7 @@ def posts_trending():
     posts = []
     for result in cursor:
         posts.append({
+            'pid': result[0],
             'tag': result[2],
             'title': result[3],
             'date': result[4].strftime('%B %d, %Y'),
