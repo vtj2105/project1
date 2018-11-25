@@ -8,7 +8,7 @@
     <meta name="description" content="">
     <meta name="author" content="">
 
-    <title> Scoop Home </title>
+    <title> Scoop - Post w/ Tag </title>
 
     <!-- Bootstrap core CSS -->
     <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" rel="stylesheet">
@@ -30,7 +30,7 @@
         <div class="collapse navbar-collapse" id="navbarResponsive">
           <ul class="navbar-nav ml-auto">
             <li class="nav-item active">
-              <a class="nav-link" href="#">Home
+              <a class="nav-link" href="/">Home
                 <span class="sr-only">(current)</span>
               </a>
             </li>
@@ -56,7 +56,7 @@
         <!-- Blog Entries Column -->
         <div class="col-md-8">
 
-          <h1 class="my-4"> Recent Posts </h1>
+          <h1 class="my-4"> Posts with tag '{{ tag }}' </h1>
           <!-- Blog Post -->
           {% for post in posts %}
           <div>
@@ -122,7 +122,7 @@
 
           <!-- Categories Widget -->
           <div class="card my-4">
-            <h5 class="card-header"> Tags </h5>
+            <h5 class="card-header"> Tags</h5>
             <div class="card-body">
               <div class="row">
                 <div class="col-lg-6">
@@ -137,8 +137,12 @@
             </div>
           </div>
         </div>
+
       </div>
       <!-- /.row -->
+
+    </div>
+    <!-- /.container -->
 
     <!-- Footer -->
     <footer class="py-5 bg-dark">
