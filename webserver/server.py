@@ -282,8 +282,6 @@ def add_comment(content, pid):
     return redirect('/post/%s' % pid)
 
 
-
-
 @app.route('/posts/trending')
 def posts_trending():
 
