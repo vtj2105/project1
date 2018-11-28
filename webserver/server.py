@@ -321,6 +321,17 @@ def posts_trending():
     context = {'tags': tags, 'posts': posts}
     return render_template('trending.html', **context)
 
+@app.route('/subscribe/<sid>/<uid>')
+def subscribe(sid, uid):
+
+    # Subscribe user 1 (uid) to user 2 (sid)
+    if sid != uid:
+        cmd = \
+            """INSERT INTO subscribe(sid, uid) VALUES (:sid, :uid) ON CONFLICT DO NOTHING"""
+        g.conn.execute(text(cmd), sid=sid, uid=uid)
+
+    return redirect('/profile/%s' % uid)
+
 @app.route('/profile/<uid>')
 def profile(uid):
 
@@ -356,14 +367,15 @@ def profile(uid):
 
     cmd = \
         """
-            SELECT S.sid FROM subscribe  AS S
-                WHERE S.uid=:uid
+            SELECT S.uid FROM subscribe AS S
+                WHERE S.sid=:uid
          """
 
     cursor = g.conn.execute(text(cmd), uid=uid)
-    sids =[]
+    sids = []
     for result in cursor:
         sids.append(result[0])
+    print(sids, "SIDDDDSSSS!!")
     cursor.close()
 
     # Get data about each subscriber
@@ -386,6 +398,8 @@ def profile(uid):
 
     context = { 'tags': tags, 'subscribers': subscribers, 'account': account }
     return render_template('profile.html', **context)
+
+
 
 
 if __name__ == '__main__':
