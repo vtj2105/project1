@@ -37,7 +37,6 @@ def teardown_request(exception):
     except Exception as e:
         pass
 
-
 @app.route('/')
 def index():
 
@@ -56,6 +55,14 @@ def index():
 
     posts = []
     for result in cursor:
+        cmd = """ SELECT name FROM tagsmade where pid = :pid """
+        cursor_inner = g.conn.execute(text(cmd), pid=result[0])
+
+        my_tags = []
+        for result_inner in cursor_inner:
+            my_tags.append(result_inner[0])
+
+        cursor_inner.close()
         posts.append({
             'pid': result[0],
             'tag': result[2],
@@ -63,13 +70,95 @@ def index():
             'date': result[4].strftime('%B %d, %Y'),
             'caption': result[5],
             'photo': result[6],
+            'tags': my_tags
             })
     cursor.close()
 
-    context = {'tags': tags, 'posts': posts}
+
+    # Get all categories
+
+    cursor = g.conn.execute('SELECT * FROM category')
+    categories = []
+    for result in cursor:
+        categories.append({
+            'name': result[0]
+            })
+    cursor.close()
+
+    context = {'tags': tags, 'posts': posts, 'categories': categories}
     return render_template('index.html', **context)
 
 
+#make post
+@app.route('/posts/makepost')
+def make_post():
+
+    # Get all tags
+    cursor = g.conn.execute('SELECT * FROM tags')
+
+    tags = []
+    for result in cursor:
+        tags.append(result[0])
+    cursor.close()
+
+    # Get last record
+    cursor = g.conn.execute('SELECT MAX(pid) FROM post')
+
+    pid = 0
+    for result in cursor:
+        pid = result[0]
+    cursor.close()
+
+
+    cursor = g.conn.execute('SELECT * FROM category')
+    categories = []
+    for result in cursor:
+        categories.append({
+            'name': result[0]
+            })
+    cursor.close()
+
+    context = {'tags': tags, 'pid': pid, 'categories': categories}
+    return render_template('make_post.html', **context)
+
+
+#save post
+@app.route('/posts/savepost', methods=['POST'])
+def save_post():
+    title = str(request.form['title'])
+    category = str(request.form['category'])
+    description= str(request.form['description'])
+    tag = str(request.form['tag'])
+    pid = int(request.form['pid']) + 1
+
+    tagList = tag.split(', ')
+
+    cmd = \
+         """ SELECT COUNT(*) FROM category
+                WHERE name = :name """
+    cursor = g.conn.execute(text(cmd), name=category )
+
+    for result in cursor:
+        if result[0] == 0:
+            cmd = \
+            """ INSERT INTO category(name, description, uid)
+                VALUES(:name, :description, :uid) """
+            g.conn.execute(text(cmd),name=category, description='This is a {} cateory'.format(category), uid=1)
+    cursor.close()
+
+    cmd = \
+        """ INSERT INTO post(pid, uid, c_name, title, upload_date, description, upvotes, downvotes)
+            VALUES(:pid, :uid, :c_name, :title, :upload_date, :description, :upvotes, :downvotes) """
+    g.conn.execute(text(cmd),pid=pid, uid=1, c_name=category, title=title, upload_date=datetime.now(), description=description, upvotes=0, downvotes=0)
+
+    for my_tag in tagList:
+        cmd = """ INSERT INTO tagsmade(name, pid) VALUES(:name, :pid) """
+        g.conn.execute(text(cmd),name=my_tag, pid=pid)
+
+    return redirect('/posts/today')
+
+
+# hall of fame
 @app.route('/posts/hall_of_fame')
 def hall_of_fame():
 
@@ -95,6 +184,14 @@ def hall_of_fame():
 
     posts = []
     for result in cursor:
+        cmd = """ SELECT name FROM tagsmade where pid = :pid """
+        cursor_inner = g.conn.execute(text(cmd), pid=result[0])
+
+        my_tags = []
+        for result_inner in cursor_inner:
+            my_tags.append(result_inner[0])
+
+        cursor_inner.close()
         posts.append({
             'pid': result[0],
             'tag': result[2],
@@ -102,13 +199,25 @@ def hall_of_fame():
             'date': result[4].strftime('%B %d, %Y'),
             'caption': result[5],
             'photo': result[6],
+            'tags': my_tags
+            })
+
+        # Get all categories
+
+    cursor = g.conn.execute('SELECT * FROM category')
+
+    categories = []
+    for result in cursor:
+        categories.append({
+            'name': result[0]
             })
     cursor.close()
 
-    context = {'tags': tags, 'posts': posts}
+    context = {'tags': tags, 'posts': posts, 'categories': categories}
     return render_template('hall_of_fame.html', **context)
 
 
+# post page
 @app.route('/post/<pid>')
 def post(pid):
     # Get all tags
@@ -119,6 +228,16 @@ def post(pid):
     for result in cursor:
         tags.append(result[0])
     cursor.close()
+
+    # Get all categories
+
+    cursor = g.conn.execute('SELECT * FROM category')
+
+    categories = []
+    for result in cursor:
+        categories.append({
+            'name': result[0]
+            })
 
     # Get post by pid
 
@@ -136,6 +255,16 @@ def post(pid):
     result = cursor.fetchone()
     post = {}
     if result:
+
+        cmd = """ SELECT name FROM tagsmade where pid = :pid """
+        cursor_inner = g.conn.execute(text(cmd), pid=result[0])
+
+        my_tags = []
+        for result_inner in cursor_inner:
+            my_tags.append(result_inner[0])
+
+        cursor_inner.close()
+
         post = {
                 'pid': result[0],
                 'uid': result[1],
@@ -144,6 +273,9 @@ def post(pid):
                 'date': result[4].strftime('%B %d, %Y'),
                 'caption': result[5],
                 'photo': result[6],
+                'like': result[7],
+                'dislike': result[8],
+                'tags': my_tags
         }
     cursor.close()
 
@@ -186,7 +318,7 @@ def post(pid):
         username = temp_result[0].split('@')[0]
         comments.append({
             'content': result[0],
-            'time': result[1].strftime('%B %d, %Y'),
+            'time': result[1].strftime('%b %d %y, %-I%p'),
             'username': username,
             'uid': temp_result[1]
         })
@@ -194,10 +326,11 @@ def post(pid):
         temp_cursor.close()
     cursor.close()
 
-    context = {'tags': tags, 'post': post, 'comments': comments, 'username': username}
+    context = {'tags': tags, 'post': post, 'categories': categories, 'comments': comments, 'username': username}
     return render_template('post.html', **context)
 
 
+# today's post
 @app.route('/posts/today')
 def posts_today():
 
@@ -221,6 +354,14 @@ def posts_today():
 
     posts = []
     for result in cursor:
+        cmd = """ SELECT name FROM tagsmade where pid = :pid """
+        cursor_inner = g.conn.execute(text(cmd), pid=result[0])
+
+        my_tags = []
+        for result_inner in cursor_inner:
+            my_tags.append(result_inner[0])
+
+        cursor_inner.close()
         posts.append({
             'pid': result[0],
             'tag': result[2],
@@ -228,13 +369,26 @@ def posts_today():
             'date': result[4].strftime('%B %d, %Y'),
             'caption': result[5],
             'photo': result[6],
+            'tags': my_tags
             })
+
+        # Get all categories
+
+    cursor = g.conn.execute('SELECT * FROM category')
+
+    categories = []
+    for result in cursor:
+        categories.append({
+            'name': result[0]
+            })
+
     cursor.close()
 
-    context = {'tags': tags, 'posts': posts}
+    context = {'tags': tags, 'posts': posts, 'categories':categories}
     return render_template('today.html', **context)
 
 
+# tags page
 @app.route('/posts/tag/<tag>')
 def posts_with_tag(tag):
 
@@ -261,6 +415,14 @@ def posts_with_tag(tag):
 
     posts = []
     for result in cursor:
+        cmd = """ SELECT name FROM tagsmade where pid = :pid """
+        cursor_inner = g.conn.execute(text(cmd), pid=result[0])
+
+        my_tags = []
+        for result_inner in cursor_inner:
+            my_tags.append(result_inner[0])
+
+        cursor_inner.close()
         posts.append({
             'pid': result[0],
             'tag': result[2],
@@ -268,39 +430,90 @@ def posts_with_tag(tag):
             'date': result[4].strftime('%B %d, %Y'),
             'caption': result[5],
             'photo': result[6],
+            'tags': my_tags
             })
     cursor.close()
 
-    context = {'tags': tags, 'posts': posts, 'tag': tag}
+    cursor = g.conn.execute('SELECT * FROM category')
+    categories = []
+    for result in cursor:
+        categories.append({
+            'name': result[0]
+            })
+    cursor.close()
+
+    context = {'tags': tags, 'posts': posts, 'tag': tag, 'categories': categories}
     return render_template('posts_with_tag.html', **context)
 
 
-@app.route('/comment/<content>/<pid>')
-def add_comment(content, pid):
+# category page
+@app.route('/posts/category/<category>')
+def posts_with_category(category):
 
-    # Add comment to post
+    # Get all tagg
+    cursor = g.conn.execute('SELECT * FROM tags')
+
+    tags = []
+    for result in cursor:
+        tags.append(result[0])
+
+
+    # Get all posts with tag
 
     cmd = \
         """
-            INSERT INTO comment(content, time, uid, pid)
-                VALUES (:content, :time, :uid, :pid)
+            SELECT * FROM post AS P
+                WHERE c_name=:category
+
         """
-    g.conn.execute(text(cmd), content=content, time=datetime.now(), uid=1, pid=pid)
+    cursor = g.conn.execute(text(cmd), category=category)
 
-    return redirect('/post/%s' % pid)
+    posts = []
+    for result in cursor:
+
+        cmd = """ SELECT name FROM tagsmade where pid = :pid """
+        cursor_inner = g.conn.execute(text(cmd), pid=result[0])
+
+        my_tags = []
+        for result_inner in cursor_inner:
+            my_tags.append(result_inner[0])
+
+        cursor_inner.close()
+
+        posts.append({
+            'pid': result[0],
+            'tag': result[2],
+            'title': result[3],
+            'date': result[4].strftime('%B %d, %Y'),
+            'caption': result[5],
+            'photo': result[6],
+            'tags': my_tags
+            })
+
+    cursor = g.conn.execute('SELECT * FROM category')
+
+    categories = []
+    for result in cursor:
+        categories.append({
+            'name': result[0]
+            })
+
+    cursor.close()
+
+    context = {'tags': tags, 'posts': posts, 'categories': categories, 'category': category}
+    return render_template('posts_with_cat.html', **context)
 
 
+#trending page
 @app.route('/posts/trending')
 def posts_trending():
 
     # Get all tags
-
     cursor = g.conn.execute('SELECT * FROM tags')
     tags = []
     for result in cursor:
         tags.append(result[0])
     cursor.close()
-
     # Get all posts trending this week
 
     cmd = \
@@ -316,6 +529,15 @@ def posts_trending():
 
     posts = []
     for result in cursor:
+        cmd = """ SELECT name FROM tagsmade where pid = :pid """
+        cursor_inner = g.conn.execute(text(cmd), pid=result[0])
+
+        my_tags = []
+        for result_inner in cursor_inner:
+            my_tags.append(result_inner[0])
+
+        cursor_inner.close()
+
         posts.append({
             'pid': result[0],
             'tag': result[2],
@@ -323,11 +545,24 @@ def posts_trending():
             'date': result[4].strftime('%B %d, %Y'),
             'caption': result[5],
             'photo': result[6],
+            'tags': my_tags
             })
     cursor.close()
+        # Get all categories
 
-    context = {'tags': tags, 'posts': posts}
+    cursor = g.conn.execute('SELECT * FROM category')
+
+    categories = []
+    for result in cursor:
+        categories.append({
+            'name': result[0]
+            })
+
+    cursor.close()
+
+    context = {'tags': tags, 'posts': posts, 'categories': categories}
     return render_template('trending.html', **context)
+
 
 
 @app.route('/subscribe/<sid>/<uid>')
@@ -412,10 +647,127 @@ def profile(uid):
     context = { 'tags': tags, 'subscribers': subscribers, 'account': account }
     return render_template('profile.html', **context)
 
+#comment
+@app.route('/comment/<pid>', methods=['POST'])
+def add_comment(pid):
+
+    # Add comment to post
+    content = str(request.form['content'])
+
+
+    cmd = """ INSERT INTO comment(content, time, uid, pid) VALUES(:content, :time, :uid, :pid) """
+    g.conn.execute(text(cmd),content=content, time=datetime.now(), uid=1, pid=pid)
+
+    return redirect('/post/%s'%pid)
+
+
+#like
+@app.route('/like/<pid>')
+def like_post(pid):
+
+    cmd = \
+         """ SELECT COUNT(*) FROM vote
+                WHERE pid = :pid AND uid =:uid """
+    cursor = g.conn.execute(text(cmd), pid=pid, uid=1)
+
+    for result in cursor:
+        if result[0] == 0:
+            cmd = """ INSERT INTO vote(pid, uid, vote_type) VALUES(:pid, :uid, :vote) """
+            g.conn.execute(text(cmd),pid=pid, uid=1, vote=True)
+
+            cmd = """ SELECT upvotes FROM post WHERE pid = :pid """
+            cursor_inner = g.conn.execute(text(cmd), pid=pid)
+
+            ilike = 0
+            for result_inner in cursor_inner:
+                ilike = result_inner[0] + 1
+            cursor_inner.close()
+
+            cmd = """ UPDATE post SET upvotes = :ilike WHERE pid = :pid """
+            g.conn.execute(text(cmd), ilike=ilike, pid=pid)
+        else:
+            cmd = \
+                """ SELECT vote_type FROM vote
+                    WHERE pid = :pid AND uid =:uid """
+            cursor_inner = g.conn.execute(text(cmd), pid=pid, uid=1)
+
+            for result_inner in cursor_inner:
+                if result_inner[0] == False:
+                    cmd = """ UPDATE vote SET vote_type = True WHERE pid = :pid AND uid = :uid """
+                    g.conn.execute(text(cmd),pid=pid, uid=1)
+
+                cmd = """ SELECT upvotes, downvotes FROM post WHERE pid = :pid """
+                cursor_inner_two = g.conn.execute(text(cmd), pid=pid)
+
+                ilike = 0
+                dislike = 0
+                for result_inner_two in cursor_inner_two:
+                    ilike = result_inner_two[0] + 1
+                    dislike = result_inner_two[1] - 1
+                cursor_inner_two.close()
+
+                cmd = """ UPDATE post SET upvotes = :ilike, downvotes = :dislike WHERE pid = :pid """
+                g.conn.execute(text(cmd), ilike=ilike, dislike=dislike, pid=pid)
+            cursor_inner.close()
+    cursor.close()
+
+    return redirect('/post/%s'%pid)
+
+# dislike
+@app.route('/dislike/<pid>')
+def dislike_post(pid):
+
+    cmd = \
+         """ SELECT COUNT(*) FROM vote
+                WHERE pid = :pid AND uid =:uid """
+    cursor = g.conn.execute(text(cmd), pid=pid, uid=1)
+
+    for result in cursor:
+        if result[0] == 0:
+            cmd = """ INSERT INTO vote(pid, uid, vote_type) VALUES(:pid, :uid, :vote) """
+            g.conn.execute(text(cmd),pid=pid, uid=1, vote=False)
+
+            cmd = """ SELECT downvotes FROM post WHERE pid = :pid """
+            cursor_inner = g.conn.execute(text(cmd), pid=pid)
+
+            dislike = 0
+            for result_inner in cursor_inner:
+                dislike = result_inner[0] + 1
+            cursor_inner.close()
+
+            cmd = """ UPDATE post SET downvotes = :dislike WHERE pid = :pid """
+            g.conn.execute(text(cmd), dislike=dislike, pid=pid)
+        else:
+            cmd = \
+                """ SELECT vote_type FROM vote
+                    WHERE pid = :pid AND uid =:uid """
+            cursor_inner = g.conn.execute(text(cmd), pid=pid, uid=1)
+
+            for result_inner in cursor_inner:
+                if result_inner[0] == False:
+                    cmd = """ UPDATE vote SET vote_type = False WHERE pid = :pid AND uid = :uid """
+                    g.conn.execute(text(cmd),pid=pid, uid=1)
+
+                cmd = """ SELECT upvotes, downvotes FROM post WHERE pid = :pid """
+                cursor_inner_two = g.conn.execute(text(cmd), pid=pid)
+
+                ilike = 0
+                dislike = 0
+                for result_inner_two in cursor_inner_two:
+                    ilike = result_inner_two[0] - 1
+                    dislike = result_inner_two[1] + 1
+                cursor_inner_two.close()
+
+                cmd = """ UPDATE post SET upvotes = :ilike, downvotes = :dislike WHERE pid = :pid """
+                g.conn.execute(text(cmd), ilike=ilike, dislike=dislike, pid=pid)
+            cursor_inner.close()
+    cursor.close()
+
+    return redirect('/post/%s'%pid)
+
 
 if __name__ == '__main__':
     import click
-
     @click.command()
     @click.option('--debug', is_flag=True)
     @click.option('--threaded', is_flag=True)
