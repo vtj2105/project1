@@ -10,11 +10,11 @@
 
     <title> Scoop Post </title>
 
-    <!-- Bootstrap core CSS -->
-    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" rel="stylesheet">
-
     <!-- Custom styles for this template -->
     <link href="css/blog-post.css" rel="stylesheet">
+
+    <!-- Core Bootstrap styles -->
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" rel="stylesheet">
 
   </head>
 
@@ -41,7 +41,7 @@
               <a class="nav-link" href="#"> Manage </a>
             </li>
             <li class="nav-item">
-              <a class="nav-link" href="#"> About </a>
+              <a class="nav-link" href="/profile/2"> Account </a>
             </li>
           </ul>
         </div>
@@ -63,7 +63,7 @@
           <!-- Author -->
           <p class="lead">
             by
-            {{ username }}
+            <a href='/profile/{{ post.uid }}'> {{ username }} </a>
           </p>
 
           <hr>
@@ -104,7 +104,7 @@
                 src="https://ssl.gstatic.com/images/branding/product/1x/avatar_circle_blue_512dp.png"
                 alt="" style="width:45px; height:45px;" >
               <div class="media-body">
-                  <h5 style="float:left"> {{ comment.username }} &nbsp &nbsp </h5>
+                  <h5 style="float:left"> <a href='/profile/{{ comment.uid}}'>{{ comment.username }} </a> &nbsp &nbsp </h5>
                   &nbsp &nbsp &nbsp
                   <p style="float:right"> {{ comment.time }} </p>
                 <p style="float: left">{{ comment.content }}</p>
@@ -121,19 +121,6 @@
 
         <!-- Sidebar Widgets Column -->
         <div class="col-md-4">
-
-          <!-- Search Widget -->
-          <div class="card my-4">
-            <h5 class="card-header">Search</h5>
-            <div class="card-body">
-              <div class="input-group">
-                <input type="text" class="form-control" placeholder="Search for...">
-                <span class="input-group-btn">
-                  <button class="btn btn-secondary" type="button">Go!</button>
-                </span>
-              </div>
-            </div>
-          </div>
 
           <!-- Filters Widget -->
           <div class="card my-4">
@@ -175,14 +162,13 @@
     <!-- Footer -->
     <footer class="py-5 bg-dark">
       <div class="container">
-        <p class="m-0 text-center text-white">Copyright &copy; Your Website 2018</p>
+        <p class="m-0 text-center text-white">Copyright &copy; Scoop Inc. </p>
       </div>
       <!-- /.container -->
     </footer>
 
     <!-- Bootstrap core JavaScript -->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" ></script>
 
   </body>
 

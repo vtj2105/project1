@@ -10,11 +10,11 @@
 
     <title> Scoop Home </title>
 
-    <!-- Bootstrap core CSS -->
-    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" rel="stylesheet">
-
     <!-- Custom styles for this template -->
     <link rel="stylesheet" type= "text/css" href= "{{ url_for('static',filename='css/blog-home.css') }}">
+
+    <!-- Core Bootstrap styles -->
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" rel="stylesheet">
 
   </head>
 
@@ -41,7 +41,7 @@
               <a class="nav-link" href="#"> Manage </a>
             </li>
             <li class="nav-item">
-              <a class="nav-link" href="#"> About </a>
+              <a class="nav-link" href="/profile/2"> Account </a>
             </li>
           </ul>
         </div>
@@ -75,34 +75,10 @@
             </div>
           </div>
           {% endfor %}
-
-          <!-- Pagination -->
-          <ul class="pagination justify-content-center mb-4">
-            <li class="page-item">
-              <a class="page-link" href="#">&larr; Older</a>
-            </li>
-            <li class="page-item disabled">
-              <a class="page-link" href="#">Newer &rarr;</a>
-            </li>
-          </ul>
-
         </div>
 
         <!-- Sidebar Widgets Column -->
         <div class="col-md-4">
-
-          <!-- Search Widget -->
-          <div class="card my-4">
-            <h5 class="card-header">Search</h5>
-            <div class="card-body">
-              <div class="input-group">
-                <input type="text" class="form-control" placeholder="Search for...">
-                <span class="input-group-btn">
-                  <button class="btn btn-secondary" type="button">Go!</button>
-                </span>
-              </div>
-            </div>
-          </div>
 
           <!-- Filters Widget -->
           <div class="card my-4">
@@ -150,7 +126,6 @@
 
     <!-- Bootstrap core JavaScript -->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" ></script>
 
   </body>
 
