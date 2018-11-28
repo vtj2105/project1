@@ -108,6 +108,7 @@ def hall_of_fame():
     context = {'tags': tags, 'posts': posts}
     return render_template('hall_of_fame.html', **context)
 
+
 @app.route('/post/<pid>')
 def post(pid):
     # Get all tags
@@ -195,6 +196,7 @@ def post(pid):
     context = {'tags': tags, 'post': post, 'comments': comments, 'username': username}
     return render_template('post.html', **context)
 
+
 @app.route('/posts/today')
 def posts_today():
 
@@ -271,12 +273,17 @@ def posts_with_tag(tag):
     context = {'tags': tags, 'posts': posts, 'tag': tag}
     return render_template('posts_with_tag.html', **context)
 
+
 @app.route('/comment/<content>/<pid>')
 def add_comment(content, pid):
 
     # Add comment to post
 
-    cmd = """INSERT INTO comment(content, time, uid, pid) VALUES (:content, :time, :uid, :pid);"""
+    cmd = \
+        """
+            INSERT INTO comment(content, time, uid, pid)
+                VALUES (:content, :time, :uid, :pid)
+        """
     g.conn.execute(text(cmd), content=content, time=datetime.now(), uid=1, pid=pid)
 
     return redirect('/post/%s' % pid)
@@ -321,16 +328,22 @@ def posts_trending():
     context = {'tags': tags, 'posts': posts}
     return render_template('trending.html', **context)
 
+
 @app.route('/subscribe/<sid>/<uid>')
 def subscribe(sid, uid):
 
     # Subscribe user 1 (uid) to user 2 (sid)
     if sid != uid:
         cmd = \
-            """INSERT INTO subscribe(sid, uid) VALUES (:sid, :uid) ON CONFLICT DO NOTHING"""
+            """
+                INSERT INTO subscribe(sid, uid)
+                    VALUES (:sid, :uid)
+                ON CONFLICT DO NOTHING
+            """
         g.conn.execute(text(cmd), sid=sid, uid=uid)
 
     return redirect('/profile/%s' % uid)
+
 
 @app.route('/profile/<uid>')
 def profile(uid):
@@ -349,7 +362,7 @@ def profile(uid):
         """
             SELECT * FROM users AS U
                 WHERE U.uid=:uid
-                LIMIT 1
+            LIMIT 1
         """
     cursor = g.conn.execute(text(cmd), uid=uid)
     result = cursor.fetchone()
@@ -375,7 +388,6 @@ def profile(uid):
     sids = []
     for result in cursor:
         sids.append(result[0])
-    print(sids, "SIDDDDSSSS!!")
     cursor.close()
 
     # Get data about each subscriber
@@ -400,11 +412,8 @@ def profile(uid):
     return render_template('profile.html', **context)
 
 
-
-
 if __name__ == '__main__':
     import click
-
 
     @click.command()
     @click.option('--debug', is_flag=True)
