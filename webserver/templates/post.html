@@ -16,6 +16,8 @@
     <!-- Custom styles for this template -->
     <link href="css/blog-post.css" rel="stylesheet">
 
+    <link rel="stylesheet" type= "text/css" href= "{{ url_for('static',filename='css/blog-home.css') }}">
+
   </head>
 
   <body style="padding-top: 54px;">
@@ -78,7 +80,7 @@
             <hr>
           {% endif %}
 
-          <h6 class="card-text"> Category: {{ post.tag }} </h6>
+          <h6 class="card-text"> <span class="category"> {{ post.tag }} </span> </h6>
           <!-- Post Content -->
           <p class="lead"> {{ post.caption }}</p>
 
@@ -91,6 +93,9 @@
               <a class="page-link" href="/dislike/{{ post.pid }}">Disike {{ post.dislike}}</a>
             </li>
           </div>
+          <p class="card-text" style="margin-top: 10px"> {% for tag in post.tags %}
+                       <span class="tags"> {{ tag }} </span> 
+                         {% endfor %}  </p>
           <hr>
 
           <!-- Comments Form -->

@@ -8,6 +8,21 @@ body {
   padding-top: 54px;
 }
 
+.category {
+	background-color: black;
+    padding: 5px;
+    border-radius: 8%;
+    color: #ffffff;
+}
+
+.tags {
+	background-color: orange;
+    padding: 5px;
+    border-radius: 8%;
+    color: #ffffff;
+    margin-right: 5px
+} 
+
 @media (min-width: 992px) {
   body {
     padding-top: 56px;

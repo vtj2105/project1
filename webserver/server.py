@@ -38,6 +38,7 @@ def teardown_request(exception):
         pass
 
 
+#home
 @app.route('/')
 def index():
 
@@ -56,6 +57,16 @@ def index():
 
     posts = []
     for result in cursor:
+
+        cmd = """ SELECT name FROM tagsmade where pid = :pid """
+        cursor_inner = g.conn.execute(text(cmd), pid=result[0])
+
+        my_tags = []
+        for result_inner in cursor_inner:
+            my_tags.append(result_inner[0])
+        
+        cursor_inner.close()
+
         posts.append({
             'pid': result[0],
             'tag': result[2],
@@ -63,8 +74,10 @@ def index():
             'date': result[4].strftime('%B %d, %Y'),
             'caption': result[5],
             'photo': result[6],
+            'tags': my_tags
             })
     cursor.close()
+
 
     # Get all categories
 
@@ -80,6 +93,7 @@ def index():
     return render_template('index.html', **context)
 
 
+#make post
 @app.route('/posts/makepost')
 def make_post():
 
@@ -112,6 +126,7 @@ def make_post():
     return render_template('make_post.html', **context)
     
 
+#save post
 @app.route('/posts/savepost', methods=['POST'])
 def save_post():
     title = str(request.form['title'])
@@ -120,7 +135,7 @@ def save_post():
     tag = str(request.form['tag'])
     pid = int(request.form['pid']) + 1
     
-    tagList = tag.split(', ')
+    tagList = tag.split(' ,')
     print tagList
 
     cmd = \
@@ -148,6 +163,7 @@ def save_post():
     return redirect('/posts/today')
 
 
+# hall of fame
 @app.route('/posts/hall_of_fame')
 def hall_of_fame():
 
@@ -173,6 +189,16 @@ def hall_of_fame():
 
     posts = []
     for result in cursor:
+
+        cmd = """ SELECT name FROM tagsmade where pid = :pid """
+        cursor_inner = g.conn.execute(text(cmd), pid=result[0])
+
+        my_tags = []
+        for result_inner in cursor_inner:
+            my_tags.append(result_inner[0])
+        
+        cursor_inner.close()
+
         posts.append({
             'pid': result[0],
             'tag': result[2],
@@ -180,6 +206,7 @@ def hall_of_fame():
             'date': result[4].strftime('%B %d, %Y'),
             'caption': result[5],
             'photo': result[6],
+            'tags': my_tags
             })
 
         # Get all categories
@@ -196,6 +223,8 @@ def hall_of_fame():
     context = {'tags': tags, 'posts': posts, 'categories': categories}
     return render_template('hall_of_fame.html', **context)
 
+
+# post page
 @app.route('/post/<pid>')
 def post(pid):
     # Get all tags
@@ -233,6 +262,16 @@ def post(pid):
     result = cursor.fetchone()
     post = {}
     if result:
+
+        cmd = """ SELECT name FROM tagsmade where pid = :pid """
+        cursor_inner = g.conn.execute(text(cmd), pid=result[0])
+
+        my_tags = []
+        for result_inner in cursor_inner:
+            my_tags.append(result_inner[0])
+        
+        cursor_inner.close()
+
         post = {
                 'pid': result[0],
                 'uid': result[1],
@@ -242,7 +281,8 @@ def post(pid):
                 'caption': result[5],
                 'photo': result[6],
                 'like': result[7],
-                'dislike': result[8]
+                'dislike': result[8],
+                'tags': my_tags
         }
     cursor.close()
 
@@ -295,6 +335,8 @@ def post(pid):
     context = {'tags': tags, 'post': post, 'categories': categories, 'comments': comments, 'username': username}
     return render_template('post.html', **context)
 
+
+# today's post
 @app.route('/posts/today')
 def posts_today():
 
@@ -318,6 +360,16 @@ def posts_today():
 
     posts = []
     for result in cursor:
+
+        cmd = """ SELECT name FROM tagsmade where pid = :pid """
+        cursor_inner = g.conn.execute(text(cmd), pid=result[0])
+
+        my_tags = []
+        for result_inner in cursor_inner:
+            my_tags.append(result_inner[0])
+        
+        cursor_inner.close()
+
         posts.append({
             'pid': result[0],
             'tag': result[2],
@@ -325,6 +377,7 @@ def posts_today():
             'date': result[4].strftime('%B %d, %Y'),
             'caption': result[5],
             'photo': result[6],
+            'tags': my_tags
             })
 
         # Get all categories
@@ -343,6 +396,7 @@ def posts_today():
     return render_template('today.html', **context)
 
 
+# tags page
 @app.route('/posts/tag/<tag>')
 def posts_with_tag(tag):
 
@@ -369,6 +423,16 @@ def posts_with_tag(tag):
 
     posts = []
     for result in cursor:
+
+        cmd = """ SELECT name FROM tagsmade where pid = :pid """
+        cursor_inner = g.conn.execute(text(cmd), pid=result[0])
+
+        my_tags = []
+        for result_inner in cursor_inner:
+            my_tags.append(result_inner[0])
+        
+        cursor_inner.close()
+
         posts.append({
             'pid': result[0],
             'tag': result[2],
@@ -376,6 +440,7 @@ def posts_with_tag(tag):
             'date': result[4].strftime('%B %d, %Y'),
             'caption': result[5],
             'photo': result[6],
+            'tags': my_tags
             })
     cursor.close()
 
@@ -390,6 +455,8 @@ def posts_with_tag(tag):
     context = {'tags': tags, 'posts': posts, 'tag': tag, 'categories': categories}
     return render_template('posts_with_tag.html', **context)
 
+
+# category page
 @app.route('/posts/category/<category>')
 def posts_with_category(category):
 
@@ -413,6 +480,16 @@ def posts_with_category(category):
 
     posts = []
     for result in cursor:
+
+        cmd = """ SELECT name FROM tagsmade where pid = :pid """
+        cursor_inner = g.conn.execute(text(cmd), pid=result[0])
+
+        my_tags = []
+        for result_inner in cursor_inner:
+            my_tags.append(result_inner[0])
+        
+        cursor_inner.close()
+
         posts.append({
             'pid': result[0],
             'tag': result[2],
@@ -420,6 +497,7 @@ def posts_with_category(category):
             'date': result[4].strftime('%B %d, %Y'),
             'caption': result[5],
             'photo': result[6],
+            'tags': my_tags
             })
     
     cursor = g.conn.execute('SELECT * FROM category')
@@ -436,6 +514,7 @@ def posts_with_category(category):
     return render_template('posts_with_cat.html', **context)
 
 
+#trending page
 @app.route('/posts/trending')
 def posts_trending():
 
@@ -460,6 +539,16 @@ def posts_trending():
 
     posts = []
     for result in cursor:
+
+        cmd = """ SELECT name FROM tagsmade where pid = :pid """
+        cursor_inner = g.conn.execute(text(cmd), pid=result[0])
+
+        my_tags = []
+        for result_inner in cursor_inner:
+            my_tags.append(result_inner[0])
+        
+        cursor_inner.close()
+
         posts.append({
             'pid': result[0],
             'tag': result[2],
@@ -467,6 +556,7 @@ def posts_trending():
             'date': result[4].strftime('%B %d, %Y'),
             'caption': result[5],
             'photo': result[6],
+            'tags': my_tags
             })
     cursor.close()
         # Get all categories
@@ -484,6 +574,7 @@ def posts_trending():
     context = {'tags': tags, 'posts': posts, 'categories': categories}
     return render_template('trending.html', **context)
 
+#comment
 @app.route('/comment/<pid>', methods=['POST'])
 def add_comment(pid):
 
@@ -496,6 +587,8 @@ def add_comment(pid):
 
     return redirect('/post/%s'%pid) 
 
+
+#like
 @app.route('/like/<pid>')
 def like_post(pid):
 
@@ -547,7 +640,7 @@ def like_post(pid):
 
     return redirect('/post/%s'%pid) 
 
-
+# dislike
 @app.route('/dislike/<pid>')
 def dislike_post(pid):
 
