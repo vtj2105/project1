@@ -66,6 +66,7 @@
               {% endif %}
               <div class="card-body">
                 <h2 class="card-title"> {{ post.title }} </h2>
+                <h6 class="card-text"> Category: {{ post.tag }} </h6>
                 <p class="card-text"> {{ post.caption }} </p>
                 <a href="/post/{{ post.pid }}" class="btn btn-primary">Read More &rarr;</a>
               </div>
@@ -120,7 +121,7 @@
               </div>
             </div>
 
-	         <!-- Cat Widget -->
+	          <!-- Cat Widget -->
           <div class="card my-4">
             <h5 class="card-header"> Categories </h5>
             <div class="card-body">
@@ -128,7 +129,7 @@
                 <div class="col-lg-6">
                   <ul class="list-unstyled mb-0">
                    {% for category in categories%}
-                    <li> <a href="/posts/category/{{ categories.name }}">{{ categories.name }}</a> </li>
+                    <li> <a href="/posts/category/{{ category.name }}">{{ category.name }}</a> </li>
                   {% endfor %}
                 </ul>
                 </div>
