@@ -135,7 +135,7 @@ def save_post():
     tag = str(request.form['tag'])
     pid = int(request.form['pid']) + 1
     
-    tagList = tag.split(' ,')
+    tagList = tag.split(', ')
     print tagList
 
     cmd = \
