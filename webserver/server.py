@@ -277,7 +277,7 @@ def add_comment(content, pid):
     # Add comment to post
 
     cmd = """INSERT INTO comment(content, time, uid, pid) VALUES (:content, :time, :uid, :pid);"""
-    engine.execute(text(cmd), content=content, time=datetime.now(), uid=1, pid=pid)
+    g.conn.execute(text(cmd), content=content, time=datetime.now(), uid=1, pid=pid)
 
     return redirect('/post/%s' % pid)
 
@@ -320,6 +320,73 @@ def posts_trending():
 
     context = {'tags': tags, 'posts': posts}
     return render_template('trending.html', **context)
+
+@app.route('/profile/<uid>')
+def profile(uid):
+
+    # Get all tags
+
+    cursor = g.conn.execute('SELECT * FROM tags')
+    tags = []
+    for result in cursor:
+        tags.append(result[0])
+    cursor.close()
+
+    # Get info about current user
+
+    cmd = \
+        """
+            SELECT * FROM users AS U
+                WHERE U.uid=:uid
+                LIMIT 1
+        """
+    cursor = g.conn.execute(text(cmd), uid=uid)
+    result = cursor.fetchone()
+    account = {
+        'uid': result[0],
+        'name': "%s %s" % (result[1], result[2]),
+        'birthdate': result[3].strftime('%B %d, %Y'),
+        'email': result[4],
+        'username': (result[4].split('@'))[0],
+        'bio': result[7]
+    }
+    cursor.close()
+
+    # Get all subscribers for a user
+
+    cmd = \
+        """
+            SELECT S.sid FROM subscribe  AS S
+                WHERE S.uid=:uid
+         """
+
+    cursor = g.conn.execute(text(cmd), uid=uid)
+    sids =[]
+    for result in cursor:
+        sids.append(result[0])
+    cursor.close()
+
+    # Get data about each subscriber
+
+    subscribers = []
+    for sid in sids:
+        cmd = \
+            """
+                SELECT U.uid, U.fname, U.lname , U.email FROM users AS U
+                    WHERE U.uid=:uid
+            """
+        cursor = g.conn.execute(text(cmd), uid=sid)
+        for result in cursor:
+            subscribers.append({
+                'uid': result[0],
+                'name': "%s %s" % (result[1], result[2]),
+                'username': (result[3].split('@'))[0]
+            })
+        cursor.close()
+
+    context = { 'tags': tags, 'subscribers': subscribers, 'account': account }
+    return render_template('profile.html', **context)
+
 
 if __name__ == '__main__':
     import click

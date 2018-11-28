@@ -8,7 +8,7 @@
     <meta name="description" content="">
     <meta name="author" content="">
 
-    <title> Scoop Today </title>
+    <title> Scoop Home </title>
 
     <!-- Bootstrap core CSS -->
     <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" rel="stylesheet">
@@ -30,7 +30,7 @@
         <div class="collapse navbar-collapse" id="navbarResponsive">
           <ul class="navbar-nav ml-auto">
             <li class="nav-item active">
-              <a class="nav-link" href="/">Home
+              <a class="nav-link" href="#">Home
                 <span class="sr-only">(current)</span>
               </a>
             </li>
@@ -53,28 +53,44 @@
 
       <div class="row">
 
-        <!-- Blog Entries Column -->
+        <!-- Main Column -->
         <div class="col-md-8">
 
-          <h1 class="my-4"> Today's Posts </h1>
-          <!-- Blog Post -->
-          {% for post in posts %}
-          <div>
-            <div class="card mb-4">
-              {% if post.photo %}
-                <img class="card-img-top" src={{ post.photo }} alt={{ post.title }}>
-              {% endif %}
-              <div class="card-body">
-                <h2 class="card-title"> {{ post.title }} </h2>
-                <p class="card-text"> {{ post.caption }} </p>
-                <a href="/post/{{ post.pid }}" class="btn btn-primary">Read More &rarr;</a>
-              </div>
-              <div class="card-footer text-muted">
-                Posted on {{ post.date }}
+
+          <h1 class="my-4"> Account Info </h1>
+          <div class="card my-4">
+            <h5 class="card-header"> Personal Details  </h5>
+            <div class="card-body">
+              <div class="row">
+                <div class="col-lg-6">
+                  <ul class="list-unstyled mb-0">
+                    <li> <strong> Name: </strong> {{ account.name }} </li>
+                    <li> <strong> Username: </strong> {{ account.username }} </li>
+                    <li> <strong> Email: </strong> {{ account.email }} </li>
+                    <li> <strong> Birthdate: </strong> {{ account.birthdate }} </li>
+                    <li> <strong> Bio: </strong> {{ account.bio }} </li>
+                    <li> <strong> User ID: </strong> {{ account.uid }} </li>
+                  </ul>
+                </div>
               </div>
             </div>
-          </div>
-          {% endfor %}
+            </div>
+
+          <div class="card my-4">
+            <h5 class="card-header"> Subscribers  </h5>
+            <div class="card-body">
+              <div class="row">
+                <div class="col-lg-6">
+                  <ul class="list-unstyled mb-0">
+                    {% for sub in subscribers %}
+                    <li> <a href="/profile/{{ sub.uid }}"> {{ sub.name }} - {{ sub.username }} </a> </li>
+                  {% endfor %}
+                  </ul>
+                </div>
+                </div>
+              </div>
+            </div>
+
 
           <!-- Pagination -->
           <ul class="pagination justify-content-center mb-4">
@@ -137,8 +153,6 @@
             </div>
           </div>
         </div>
-
-
       </div>
       <!-- /.row -->
 
