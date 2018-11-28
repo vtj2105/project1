@@ -104,7 +104,7 @@
                 src="https://ssl.gstatic.com/images/branding/product/1x/avatar_circle_blue_512dp.png"
                 alt="" style="width:45px; height:45px;" >
               <div class="media-body">
-                  <h5 style="float:left"> {{ comment.username }} &nbsp &nbsp </h5>
+                  <h5 style="float:left"> <a href='/profile/{{ comment.uid}}'>{{ comment.username }} </a> &nbsp &nbsp </h5>
                   &nbsp &nbsp &nbsp
                   <p style="float:right"> {{ comment.time }} </p>
                 <p style="float: left">{{ comment.content }}</p>

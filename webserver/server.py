@@ -176,7 +176,7 @@ def post(pid):
 
         cmd = \
             """
-                SELECT email FROM users AS U
+                SELECT U.email, U.uid FROM users AS U
                     WHERE U.uid=:uid
                     LIMIT 1
             """
@@ -187,7 +187,8 @@ def post(pid):
         comments.append({
             'content': result[0],
             'time': result[1].strftime('%B %d, %Y'),
-            'username': username
+            'username': username,
+            'uid': temp_result[1]
         })
 
         temp_cursor.close()
